@@ -5,6 +5,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
-<p th:text="'Hello, ' + ${name} + '!'" >Gerard</p>
+<table>
+    <tr>
+        <th>Name</th>
+    </tr>
+    <tr th:each="monitor : ${monitors}">
+        <td th:text="${monitor.name}">Monitor</td>
+    </tr>
+</table>
+
 </body>
 </html>
