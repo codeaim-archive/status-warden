@@ -24,9 +24,17 @@ jar {
     version =  '0.0.1'
 }
 
+idea {
+    module {
+        inheritOutputDirs = false
+        outputDir = file("$buildDir/classes/main/")
+    }
+}
+
 dependencies {
     compile project(':common')
     compile "org.apache.httpcomponents:httpclient:4.5"
     compile "org.springframework.boot:spring-boot-starter-thymeleaf"
+    compile "org.springframework.boot:spring-boot-devtools"
 }
 

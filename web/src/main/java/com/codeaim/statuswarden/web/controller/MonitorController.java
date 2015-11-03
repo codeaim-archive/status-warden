@@ -18,7 +18,7 @@ public class MonitorController
     public String monitorList(@RequestParam(value = "name", required = false, defaultValue = "World") String name, Model model)
     {
         model.addAttribute("monitors", getMonitors());
-        return "home";
+        return "monitors";
     }
 
     private Monitor[] getMonitors()
