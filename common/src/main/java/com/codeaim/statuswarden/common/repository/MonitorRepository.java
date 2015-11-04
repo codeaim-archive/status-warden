@@ -6,13 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
-public interface MonitorRepository extends MongoRepository<Monitor, String>
+public interface MonitorRepository extends MongoRepository<Monitor, String>, MonitorRepositoryCustom
 {
     @Query("{ $or: [ { state: 'WAITING', audit: { $lte: ?0 } }, { state: 'ELECTED', locked: { $lte: ?0 } } ] }")
-    Page<Monitor> findElectable(Date currentDate, Pageable pageable);
+    Page<Monitor> findElectable(LocalDateTime currentDate, Pageable pageable);
 
     @Query("{ $and: [ { $or: [ { state: 'WAITING', audit: { $lte: ?0 } }, { state: 'ELECTED', locked: { $lte: ?0 } } ] }, { $or: [ { confirming: false }, { scheduler: { $ne: ?1 } } ] } ] }")
-    Page<Monitor> findElectableClustered(Date currentDate, String scheduler, Pageable pageable);
+    Page<Monitor> findElectableClustered(LocalDateTime currentDate, String scheduler, Pageable pageable);
 }

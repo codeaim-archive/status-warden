@@ -5,6 +5,7 @@ import com.codeaim.statuswarden.common.model.Monitor;
 import com.codeaim.statuswarden.common.model.MonitorEvent;
 import com.codeaim.statuswarden.common.model.State;
 import com.codeaim.statuswarden.common.model.Status;
+import com.codeaim.statuswarden.common.repository.MonitorEventRepository;
 import com.codeaim.statuswarden.common.repository.MonitorRepository;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.HttpClients;
@@ -14,20 +15,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 public class StatusAcquisitionTask
 {
     private static final Logger log = LoggerFactory.getLogger(StatusAcquisitionTask.class);
 
-    public StatusAcquisitionTask(MonitorRepository monitorRepository, boolean isClustered, String schedulerName)
+    public StatusAcquisitionTask(MonitorRepository monitorRepository, MonitorEventRepository monitorEventRepository, boolean isClustered, String schedulerName)
     {
         getElectableMonitors(monitorRepository, isClustered, schedulerName)
             .getContent()
             .stream()
             .map(monitor -> markMonitorElected(monitor, monitorRepository, schedulerName))
-            .map(monitor -> checkAndUpdateMonitor(monitor, monitorRepository))
+            .map(monitor -> checkAndUpdateMonitor(monitor, monitorRepository, monitorEventRepository))
             .toArray();
     }
 
@@ -44,38 +46,38 @@ public class StatusAcquisitionTask
     private Monitor markMonitorElected(Monitor monitor, MonitorRepository monitorRepository, String schedulerName)
     {
         log.info("Marking monitor elected {}", monitor);
-        monitor.setState(State.ELECTED);
-        monitor.setLocked(new Date((now().getTime() + (60 * 1000))));
-        monitor.setScheduler(schedulerName);
-        return monitorRepository.save(monitor);
+
+        return monitorRepository.save(Monitor
+            .buildFrom(monitor)
+            .state(State.ELECTED)
+            .locked(now().plusMinutes(1))
+            .scheduler(schedulerName)
+            .build());
     }
 
-    private Monitor checkAndUpdateMonitor(Monitor monitor, MonitorRepository monitorRepository)
+    private Monitor checkAndUpdateMonitor(Monitor monitor, MonitorRepository monitorRepository, MonitorEventRepository monitorEventRepository)
     {
-        MonitorEvent monitorEvent = getMonitorCheckEvent(monitor);
-        monitor.getEvents().add(monitorEvent);
+        MonitorEvent monitorEvent = getMonitorCheckEvent(monitor, monitorEventRepository);
 
-        if (!monitorEvent.isChanged() && !monitorEvent.isConfirmation())
-            statusChangeNone(monitor);
-        if (monitorEvent.isChanged() && !monitorEvent.isConfirmation())
-            statusChangeConfirm(monitor);
-        if (!monitorEvent.isChanged() && monitorEvent.isConfirmation())
-            statusChangeConfirmationInconclusive(monitor);
         if (monitorEvent.isChanged() && monitorEvent.isConfirmation())
-            statusChangeConfirmed(monitor, monitorEvent);
+            return monitorRepository.save(statusChangeConfirmed(monitor, monitorEvent));
+        if (!monitorEvent.isChanged() && monitorEvent.isConfirmation())
+            return monitorRepository.save(statusChangeConfirmationInconclusive(monitor));
+        if (monitorEvent.isChanged())
+            return monitorRepository.save(statusChangeConfirmationRequired(monitor));
 
-        return updateMonitor(monitor, monitorRepository);
+        return monitorRepository.save(statusChangeNone(monitor));
     }
 
-    private MonitorEvent getMonitorCheckEvent(Monitor monitor)
+    private MonitorEvent getMonitorCheckEvent(Monitor monitor, MonitorEventRepository monitorEventRepository)
     {
-        log.info("Getting monitor event {}", monitor);
-        MonitorEvent monitorEvent = requestUrlAndCreateMonitorEvent(monitor);
+        log.info("Getting monitor event for monitor {}", monitor);
+        MonitorEvent monitorEvent = requestUrlAndCreateMonitorEvent(monitor, monitorEventRepository);
         log.info("Received monitor event {}", monitorEvent);
         return monitorEvent;
     }
 
-    public MonitorEvent requestUrlAndCreateMonitorEvent(Monitor monitor)
+    public MonitorEvent requestUrlAndCreateMonitorEvent(Monitor monitor, MonitorEventRepository monitorEventRepository)
     {
         try
         {
@@ -85,62 +87,77 @@ public class StatusAcquisitionTask
                 .execute(new HttpHead(monitor.getUrl()))
                 .getStatusLine()
                 .getStatusCode();
-            return MonitorEvent
+            return monitorEventRepository.save(MonitorEvent
                 .builder()
+                .monitorId(monitor.getId())
                 .scheduler(monitor.getScheduler())
                 .responseTime(System.currentTimeMillis() - startResponseTime)
                 .statusCode(statusCode)
                 .status((statusCode >= 200 && statusCode <= 399) ? Status.UP : Status.DOWN)
                 .changed(!Objects.equals((statusCode >= 200 && statusCode <= 399) ? Status.UP : Status.DOWN, monitor.getStatus()))
                 .confirmation(monitor.isConfirming())
-                .build();
+                .build());
         } catch (Exception exception)
         {
-            return MonitorEvent
+            return monitorEventRepository.save(MonitorEvent
                 .builder()
                 .status(Status.ERROR)
-                .build();
+                .build());
         }
     }
 
-    private void statusChangeNone(Monitor monitor)
+    private Monitor statusChangeNone(Monitor monitor)
     {
-        markMonitorUpdated(monitor);
+        log.info("Updating monitor {} - No status change", monitor);
+
+        return Monitor
+            .buildFrom(monitor)
+            .audit(now().plusMinutes(monitor.getInterval()))
+            .state(State.WAITING)
+            .locked(null)
+            .build();
     }
 
-    private void statusChangeConfirm(Monitor monitor)
+    private Monitor statusChangeConfirmationRequired(Monitor monitor)
     {
-        monitor.setConfirming(true);
+        log.info("Updating monitor {} - Status change confirmation required", monitor);
+
+        return Monitor
+            .buildFrom(monitor)
+            .confirming(true)
+            .state(State.WAITING)
+            .locked(null)
+            .build();
     }
 
-    private void statusChangeConfirmationInconclusive(Monitor monitor)
+    private Monitor statusChangeConfirmationInconclusive(Monitor monitor)
     {
-        monitor.setConfirming(false);
+        log.info("Updating monitor {} - Status change confirmation inconclusive", monitor);
+
+        return Monitor
+            .buildFrom(monitor)
+            .confirming(false)
+            .state(State.WAITING)
+            .locked(null)
+            .build();
     }
 
-    private void statusChangeConfirmed(Monitor monitor, MonitorEvent monitorEvent)
+    private Monitor statusChangeConfirmed(Monitor monitor, MonitorEvent monitorEvent)
     {
-        monitor.setStatus(monitorEvent.getStatus());
-        monitor.setConfirming(false);
-        markMonitorUpdated(monitor);
+        log.info("Updating monitor {} - Confirmed status change ", monitor);
+
+        return Monitor
+            .buildFrom(monitor)
+            .status(monitorEvent.getStatus())
+            .confirming(false)
+            .audit(now().plusMinutes(monitor.getInterval()))
+            .state(State.WAITING)
+            .locked(null)
+            .build();
     }
 
-    private void markMonitorUpdated(Monitor monitor)
+    private LocalDateTime now()
     {
-        monitor.setUpdated(now());
-        monitor.setAudit(new Date(now().getTime() + (monitor.getInterval() * 60 * 1000)));
-    }
-
-    private Monitor updateMonitor(Monitor monitor, MonitorRepository monitorRepository)
-    {
-        log.info("Updating monitor {}", monitor);
-        monitor.setState(State.WAITING);
-        monitor.setLocked(null);
-        return monitorRepository.save(monitor);
-    }
-
-    private Date now()
-    {
-        return new Date();
+        return LocalDateTime.now(ZoneOffset.UTC);
     }
 }
