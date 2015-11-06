@@ -2,6 +2,7 @@ package com.codeaim.statuswarden.common.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -10,6 +11,8 @@ public final class Monitor
 {
     @Id
     private final String id;
+    @Indexed
+    private final String userId;
     private final String name;
     private final String url;
     private final State state;
@@ -26,6 +29,7 @@ public final class Monitor
 
     public Monitor(
         final String id,
+        final String userId,
         final String name,
         final String url,
         final State state,
@@ -41,6 +45,7 @@ public final class Monitor
     )
     {
         this.id = id;
+        this.userId = userId;
         this.name = name;
         this.url = url;
         this.state = state;
@@ -58,6 +63,11 @@ public final class Monitor
     public String getId()
     {
         return this.id;
+    }
+
+    public String getUserId()
+    {
+        return this.userId;
     }
 
     public String getName()
@@ -126,6 +136,7 @@ public final class Monitor
     {
         return builder()
             .id(monitor.getId())
+            .userId(monitor.getUserId())
             .name(monitor.getName())
             .url(monitor.getUrl())
             .state(monitor.getState())
@@ -142,6 +153,7 @@ public final class Monitor
     public static class Builder
     {
         private String id;
+        private String userId;
         private String name;
         private String url;
         private State state;
@@ -157,6 +169,12 @@ public final class Monitor
         private Builder id(final String id)
         {
             this.id = id;
+            return this;
+        }
+
+        public Builder userId(final String userId)
+        {
+            this.userId = userId;
             return this;
         }
 
@@ -230,6 +248,7 @@ public final class Monitor
         {
             return new Monitor(
                 this.id,
+                this.userId,
                 this.name,
                 this.url,
                 this.state == null ? State.WAITING : this.state,

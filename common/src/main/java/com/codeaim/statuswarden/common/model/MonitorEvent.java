@@ -20,7 +20,7 @@ public final class MonitorEvent
     private final boolean confirmation;
     private final LocalDateTime created;
 
-    private MonitorEvent(
+    public MonitorEvent(
         final String id,
         final String monitorId,
         final Status status,
