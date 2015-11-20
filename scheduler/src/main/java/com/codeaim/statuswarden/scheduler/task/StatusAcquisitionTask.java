@@ -62,11 +62,11 @@ public class StatusAcquisitionTask
         if (monitorEvent.isChanged() && monitorEvent.isConfirmation())
             return monitorRepository.save(statusChangeConfirmed(monitor, monitorEvent));
         if (!monitorEvent.isChanged() && monitorEvent.isConfirmation())
-            return monitorRepository.save(statusChangeConfirmationInconclusive(monitor));
+            return monitorRepository.save(statusChangeConfirmationInconclusive(monitor, monitorEvent));
         if (monitorEvent.isChanged())
-            return monitorRepository.save(statusChangeConfirmationRequired(monitor));
+            return monitorRepository.save(statusChangeConfirmationRequired(monitor, monitorEvent));
 
-        return monitorRepository.save(statusChangeNone(monitor));
+        return monitorRepository.save(statusChangeNone(monitor, monitorEvent));
     }
 
     private MonitorEvent getMonitorCheckEvent(Monitor monitor, MonitorEventRepository monitorEventRepository)
@@ -90,6 +90,7 @@ public class StatusAcquisitionTask
             return monitorEventRepository.save(MonitorEvent
                 .builder()
                 .monitorId(monitor.getId())
+                .previous(monitor.getMonitorEventId())
                 .scheduler(monitor.getScheduler())
                 .responseTime(System.currentTimeMillis() - startResponseTime)
                 .statusCode(statusCode)
@@ -106,36 +107,39 @@ public class StatusAcquisitionTask
         }
     }
 
-    private Monitor statusChangeNone(Monitor monitor)
+    private Monitor statusChangeNone(Monitor monitor, MonitorEvent monitorEvent)
     {
         log.info("Updating monitor {} - No status change", monitor);
 
         return Monitor
             .buildFrom(monitor)
+            .monitorEventId(monitorEvent.getId())
             .audit(now().plusMinutes(monitor.getInterval()))
             .state(State.WAITING)
             .locked(null)
             .build();
     }
 
-    private Monitor statusChangeConfirmationRequired(Monitor monitor)
+    private Monitor statusChangeConfirmationRequired(Monitor monitor, MonitorEvent monitorEvent)
     {
         log.info("Updating monitor {} - Status change confirmation required", monitor);
 
         return Monitor
             .buildFrom(monitor)
+            .monitorEventId(monitorEvent.getId())
             .confirming(true)
             .state(State.WAITING)
             .locked(null)
             .build();
     }
 
-    private Monitor statusChangeConfirmationInconclusive(Monitor monitor)
+    private Monitor statusChangeConfirmationInconclusive(Monitor monitor, MonitorEvent monitorEvent)
     {
         log.info("Updating monitor {} - Status change confirmation inconclusive", monitor);
 
         return Monitor
             .buildFrom(monitor)
+            .monitorEventId(monitorEvent.getId())
             .confirming(false)
             .state(State.WAITING)
             .locked(null)
@@ -148,6 +152,7 @@ public class StatusAcquisitionTask
 
         return Monitor
             .buildFrom(monitor)
+            .monitorEventId(monitorEvent.getId())
             .status(monitorEvent.getStatus())
             .confirming(false)
             .audit(now().plusMinutes(monitor.getInterval()))

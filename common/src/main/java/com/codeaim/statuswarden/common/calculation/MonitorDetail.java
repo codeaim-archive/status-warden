@@ -1,19 +1,15 @@
-package com.codeaim.statuswarden.common.model;
+package com.codeaim.statuswarden.common.calculation;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.mongodb.core.index.Indexed;
+import com.codeaim.statuswarden.common.model.State;
+import com.codeaim.statuswarden.common.model.Status;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-public final class Monitor
+public final class MonitorDetail
 {
-    @Id
     private final String id;
-    @Indexed
     private final String userId;
-    @Indexed
     private final String monitorEventId;
     private final String name;
     private final String url;
@@ -26,10 +22,11 @@ public final class Monitor
     private final LocalDateTime locked;
     private final int interval;
     private final boolean confirming;
-    @Version
     private final int version;
+    private final float uptime;
+    private final long averageResponseTime;
 
-    public Monitor(
+    public MonitorDetail(
         final String id,
         final String userId,
         final String monitorEventId,
@@ -44,7 +41,9 @@ public final class Monitor
         final LocalDateTime locked,
         final int interval,
         final int version,
-        final boolean confirming
+        final boolean confirming,
+        final float uptime,
+        final long averageResponseTime
     )
     {
         this.id = id;
@@ -62,6 +61,8 @@ public final class Monitor
         this.interval = interval;
         this.version = version;
         this.confirming = confirming;
+        this.uptime = uptime;
+        this.averageResponseTime = averageResponseTime;
     }
 
     public String getId()
@@ -139,26 +140,17 @@ public final class Monitor
         return this.confirming;
     }
 
-    public static Builder builder() { return new Builder(); }
-
-    public static Builder buildFrom(Monitor monitor)
+    public float getUptime()
     {
-        return builder()
-            .id(monitor.getId())
-            .userId(monitor.getUserId())
-            .monitorEventId(monitor.getMonitorEventId())
-            .name(monitor.getName())
-            .url(monitor.getUrl())
-            .state(monitor.getState())
-            .status(monitor.getStatus())
-            .scheduler(monitor.getScheduler())
-            .created(monitor.getCreated())
-            .audit(monitor.getAudit())
-            .locked(monitor.getLocked())
-            .interval(monitor.getInterval())
-            .version(monitor.getVersion())
-            .confirming(monitor.isConfirming());
+        return this.uptime;
     }
+
+    public long getAverageResponseTime()
+    {
+        return this.averageResponseTime;
+    }
+
+    public static Builder builder() { return new Builder(); }
 
     public static class Builder
     {
@@ -176,8 +168,10 @@ public final class Monitor
         private int interval;
         private int version;
         private boolean confirming;
+        private float uptime;
+        private long averageResponseTime;
 
-        private Builder id(final String id)
+        public Builder id(final String id)
         {
             this.id = id;
             return this;
@@ -261,9 +255,21 @@ public final class Monitor
             return this;
         }
 
-        public Monitor build()
+        public Builder uptime(final float uptime)
         {
-            return new Monitor(
+            this.uptime = uptime;
+            return this;
+        }
+
+        public Builder averageResponseTime(final long averageResponseTime)
+        {
+            this.averageResponseTime = averageResponseTime;
+            return this;
+        }
+
+        public MonitorDetail build()
+        {
+            return new MonitorDetail(
                 this.id,
                 this.userId,
                 this.monitorEventId,
@@ -278,7 +284,9 @@ public final class Monitor
                 this.locked,
                 this.interval,
                 this.version,
-                this.confirming
+                this.confirming,
+                this.uptime,
+                this.averageResponseTime
             );
         }
     }

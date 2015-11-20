@@ -12,6 +12,8 @@ public final class MonitorEvent
     private final String id;
     @Indexed
     private final String monitorId;
+    @Indexed
+    private final String previous;
     private final Status status;
     private final String scheduler;
     private final int statusCode;
@@ -23,6 +25,7 @@ public final class MonitorEvent
     public MonitorEvent(
         final String id,
         final String monitorId,
+        final String previous,
         final Status status,
         final String scheduler,
         final int statusCode,
@@ -34,6 +37,7 @@ public final class MonitorEvent
     {
         this.id = id;
         this.monitorId = monitorId;
+        this.previous = previous;
         this.status = status;
         this.scheduler = scheduler;
         this.statusCode = statusCode;
@@ -51,6 +55,11 @@ public final class MonitorEvent
     public String getMonitorId()
     {
         return this.monitorId;
+    }
+
+    public String getPrevious()
+    {
+        return this.previous;
     }
 
     public Status getStatus()
@@ -94,6 +103,7 @@ public final class MonitorEvent
     {
         private String id;
         private String monitorId;
+        private String previous;
         private Status status;
         private String scheduler;
         private int statusCode;
@@ -104,6 +114,12 @@ public final class MonitorEvent
         public Builder monitorId(final String monitorId)
         {
             this.monitorId = monitorId;
+            return this;
+        }
+
+        public Builder previous(final String previous)
+        {
+            this.previous = previous;
             return this;
         }
 
@@ -148,6 +164,7 @@ public final class MonitorEvent
             return new MonitorEvent(
                 this.id,
                 this.monitorId,
+                this.previous,
                 this.status,
                 this.scheduler,
                 this.statusCode,

@@ -3,6 +3,7 @@ package com.codeaim.statuswarden.api.controller;
 import com.codeaim.statuswarden.common.model.MonitorEvent;
 import com.codeaim.statuswarden.common.repository.MonitorEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +27,7 @@ public class MonitorEventController extends AbstractController
             .findByMonitorIdBetweenDateTimes(
                 monitorId,
                 startDateTime,
-                endDateTime);
+                endDateTime, new Sort(Sort.Direction.ASC, "created"));
     }
 
     @RequestMapping("/{monitor-event-id}")
