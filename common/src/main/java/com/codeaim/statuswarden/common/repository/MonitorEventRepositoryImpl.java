@@ -2,8 +2,8 @@ package com.codeaim.statuswarden.common.repository;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import com.codeaim.statuswarden.common.calculation.MonitorAverageResponseTime;
 import com.codeaim.statuswarden.common.model.MonitorEvent;
+import com.codeaim.statuswarden.common.calculation.MonitorAverageResponseTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;

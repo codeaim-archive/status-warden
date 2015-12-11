@@ -1,2 +1,2 @@
-include ":api", ":common", ":scheduler", ':web'
+include ":common", ":scheduler", ':web', ':mock-data'
 

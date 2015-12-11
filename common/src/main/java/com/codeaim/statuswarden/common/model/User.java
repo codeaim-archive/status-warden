@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Version;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Collection;
 
 public final class User
 {
@@ -14,14 +15,13 @@ public final class User
     private final String email;
     private final String resetToken;
     private final String accessToken;
-    private final String passwordHash;
-    private final String salt;
+    private final String password;
     private final LocalDateTime updated;
     private final LocalDateTime created;
     @Version
     private final int version;
-    private final boolean admin;
     private final boolean emailVerified;
+    private final Collection<String> roles;
 
     public User(
         final String id,
@@ -29,13 +29,12 @@ public final class User
         final String email,
         final String resetToken,
         final String accessToken,
-        final String passwordHash,
-        final String salt,
+        final String password,
         final LocalDateTime updated,
         final LocalDateTime created,
         final int version,
-        final boolean admin,
-        final boolean emailVerified
+        final boolean emailVerified,
+        final Collection<String> roles
     )
     {
         this.id = id;
@@ -43,13 +42,12 @@ public final class User
         this.email = email;
         this.resetToken = resetToken;
         this.accessToken = accessToken;
-        this.passwordHash = passwordHash;
-        this.salt = salt;
+        this.password = password;
         this.updated = updated;
         this.created = created;
         this.version = version;
-        this.admin = admin;
         this.emailVerified = emailVerified;
+        this.roles = roles;
     }
 
     public String getId()
@@ -77,14 +75,9 @@ public final class User
         return this.accessToken;
     }
 
-    public String getPasswordHash()
+    public String getPassword()
     {
-        return this.passwordHash;
-    }
-
-    public String getSalt()
-    {
-        return this.salt;
+        return this.password;
     }
 
     public LocalDateTime getUpdated()
@@ -102,14 +95,14 @@ public final class User
         return this.version;
     }
 
-    public boolean isAdmin()
-    {
-        return this.admin;
-    }
-
     public boolean isEmailVerified()
     {
         return this.emailVerified;
+    }
+
+    public Collection<String> getRoles()
+    {
+        return this.roles;
     }
 
     public static Builder builder() { return new Builder(); }
@@ -122,12 +115,11 @@ public final class User
             .email(user.getEmail())
             .resetToken(user.getResetToken())
             .accessToken(user.getAccessToken())
-            .passwordHash(user.getPasswordHash())
-            .salt(user.getSalt())
+            .password(user.getPassword())
             .created(user.getCreated())
             .version(user.getVersion())
-            .admin(user.isAdmin())
-            .emailVerified(user.isEmailVerified());
+            .emailVerified(user.isEmailVerified())
+            .roles(user.getRoles());
     }
 
     public static class Builder
@@ -137,12 +129,11 @@ public final class User
         private String email;
         private String resetToken;
         private String accessToken;
-        private String passwordHash;
-        private String salt;
+        private String password;
         private LocalDateTime created;
         private int version;
-        private boolean admin;
         private boolean emailVerified;
+        private Collection<String> roles;
 
         private Builder id(final String id)
         {
@@ -174,15 +165,9 @@ public final class User
             return this;
         }
 
-        public Builder passwordHash(final String passwordHash)
+        public Builder password(final String password)
         {
-            this.passwordHash = passwordHash;
-            return this;
-        }
-
-        public Builder salt(final String salt)
-        {
-            this.salt = salt;
+            this.password = password;
             return this;
         }
 
@@ -198,15 +183,15 @@ public final class User
             return this;
         }
 
-        public Builder admin(final boolean admin)
-        {
-            this.admin = admin;
-            return this;
-        }
-
         public Builder emailVerified(final boolean emailVerified)
         {
             this.emailVerified = emailVerified;
+            return this;
+        }
+
+        public Builder roles(final Collection<String> roles)
+        {
+            this.roles = roles;
             return this;
         }
 
@@ -218,13 +203,12 @@ public final class User
                 this.email,
                 this.resetToken,
                 this.accessToken,
-                this.passwordHash,
-                this.salt,
+                this.password,
                 LocalDateTime.now(ZoneOffset.UTC),
                 this.created == null ? LocalDateTime.now(ZoneOffset.UTC) : this.created,
                 this.version,
-                this.admin,
-                this.emailVerified
+                this.emailVerified,
+                this.roles
             );
         }
     }
