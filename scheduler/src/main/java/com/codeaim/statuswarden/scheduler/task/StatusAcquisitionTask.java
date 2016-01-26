@@ -51,11 +51,11 @@ public class StatusAcquisitionTask
     {
         log.info("Getting electable monitors");
         PageRequest pageRequest = new PageRequest(0, 5, new Sort(Sort.Direction.ASC, "audit"));
-        return monitorRepository.findAll(pageRequest);
-
-//        return isClustered ?
-//            monitorRepository.findElectableClustered(now(), schedulerName, pageRequest) :
-//            monitorRepository.findElectable(now(), pageRequest);
+        return monitorRepository.findElectable(
+                schedulerName,
+                isClustered,
+                now(),
+                pageRequest);
     }
 
     private Monitor markMonitorElected(Monitor monitor)

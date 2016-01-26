@@ -3,16 +3,13 @@ package com.codeaim.statuswarden.scheduler.model;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import javax.persistence.Id;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
+import javax.persistence.*;
 
 @Entity
 public final class MonitorEvent
 {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
     private Long monitorId;
     private Long previous;
