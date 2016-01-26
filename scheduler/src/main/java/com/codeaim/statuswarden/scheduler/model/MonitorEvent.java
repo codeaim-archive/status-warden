@@ -1,31 +1,33 @@
-package com.codeaim.statuswarden.common.model;
+package com.codeaim.statuswarden.scheduler.model;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
+import javax.persistence.Id;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 
+@Entity
 public final class MonitorEvent
 {
     @Id
-    private final String id;
-    @Indexed
-    private final String monitorId;
-    @Indexed
-    private final String previous;
-    private final Status status;
-    private final String scheduler;
-    private final int statusCode;
-    private final long responseTime;
-    private final boolean changed;
-    private final boolean confirmation;
-    private final LocalDateTime created;
+    @GeneratedValue(strategy= GenerationType.AUTO)
+    private Long id;
+    private Long monitorId;
+    private Long previous;
+    private Status status;
+    private String scheduler;
+    private int statusCode;
+    private long responseTime;
+    private boolean changed;
+    private boolean confirmation;
+    private LocalDateTime created;
 
     public MonitorEvent(
-        final String id,
-        final String monitorId,
-        final String previous,
+        final Long id,
+        final Long monitorId,
+        final Long previous,
         final Status status,
         final String scheduler,
         final int statusCode,
@@ -47,17 +49,19 @@ public final class MonitorEvent
         this.created = created;
     }
 
-    public String getId()
+    protected MonitorEvent() {}
+
+    public Long getId()
     {
         return this.id;
     }
 
-    public String getMonitorId()
+    public Long getMonitorId()
     {
         return this.monitorId;
     }
 
-    public String getPrevious()
+    public Long getPrevious()
     {
         return this.previous;
     }
@@ -118,9 +122,9 @@ public final class MonitorEvent
 
     public static class Builder
     {
-        private String id;
-        private String monitorId;
-        private String previous;
+        private Long id;
+        private Long monitorId;
+        private Long previous;
         private Status status;
         private String scheduler;
         private int statusCode;
@@ -128,13 +132,13 @@ public final class MonitorEvent
         private boolean changed;
         private boolean confirmation;
 
-        public Builder monitorId(final String monitorId)
+        public Builder monitorId(final Long monitorId)
         {
             this.monitorId = monitorId;
             return this;
         }
 
-        public Builder previous(final String previous)
+        public Builder previous(final Long previous)
         {
             this.previous = previous;
             return this;

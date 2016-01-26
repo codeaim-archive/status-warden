@@ -1,17 +1,18 @@
 package com.codeaim.statuswarden.scheduler;
 
-import com.codeaim.statuswarden.common.model.Monitor;
-import com.codeaim.statuswarden.common.repository.MonitorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import com.codeaim.statuswarden.scheduler.model.Monitor;
+import com.codeaim.statuswarden.scheduler.repository.MonitorRepository;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableMongoRepositories(basePackageClasses = MonitorRepository.class)
+@EnableJpaRepositories
 public class Application implements CommandLineRunner
 {
     @Autowired

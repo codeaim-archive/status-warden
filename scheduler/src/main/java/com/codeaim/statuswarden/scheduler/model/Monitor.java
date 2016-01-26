@@ -1,38 +1,41 @@
-package com.codeaim.statuswarden.common.model;
+package com.codeaim.statuswarden.scheduler.model;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Version;
-import org.springframework.data.mongodb.core.index.Indexed;
+import javax.persistence.Id;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 
+import org.springframework.data.annotation.Version;
+
+@Entity
 public final class Monitor
 {
     @Id
-    private final String id;
-    @Indexed
-    private final String userId;
-    @Indexed
-    private final String monitorEventId;
-    private final String name;
-    private final String url;
-    private final State state;
-    private final Status status;
-    private final String scheduler;
-    private final LocalDateTime updated;
-    private final LocalDateTime created;
-    private final LocalDateTime audit;
-    private final LocalDateTime locked;
-    private final int interval;
-    private final boolean confirming;
+    @GeneratedValue(strategy= GenerationType.AUTO)
+    private Long id;
+    private String userId;
+    private Long monitorEventId;
+    private String name;
+    private String url;
+    private State state;
+    private Status status;
+    private String scheduler;
+    private LocalDateTime updated;
+    private LocalDateTime created;
+    private LocalDateTime audit;
+    private LocalDateTime locked;
+    private int interval;
+    private boolean confirming;
     @Version
-    private final int version;
+    private int version;
 
     public Monitor(
-        final String id,
+        final Long id,
         final String userId,
-        final String monitorEventId,
+        final Long monitorEventId,
         final String name,
         final String url,
         final State state,
@@ -64,7 +67,9 @@ public final class Monitor
         this.confirming = confirming;
     }
 
-    public String getId()
+    protected Monitor() {}
+
+    public Long getId()
     {
         return this.id;
     }
@@ -74,7 +79,7 @@ public final class Monitor
         return this.userId;
     }
 
-    public String getMonitorEventId()
+    public Long getMonitorEventId()
     {
         return this.monitorEventId;
     }
@@ -184,8 +189,8 @@ public final class Monitor
 
     public static class Builder
     {
-        private String id;
-        private String monitorEventId;
+        private Long id;
+        private Long monitorEventId;
         private String userId;
         private String name;
         private String url;
@@ -199,7 +204,7 @@ public final class Monitor
         private int version;
         private boolean confirming;
 
-        private Builder id(final String id)
+        private Builder id(final Long id)
         {
             this.id = id;
             return this;
@@ -211,7 +216,7 @@ public final class Monitor
             return this;
         }
 
-        public Builder monitorEventId(final String monitorEventId)
+        public Builder monitorEventId(final Long monitorEventId)
         {
             this.monitorEventId = monitorEventId;
             return this;
